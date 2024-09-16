@@ -16,7 +16,8 @@ dependencies:
   provider: ^6.1.2
   flutter_svg: ^2.0.10+1
   google_fonts: ^4.0.3
-  draggable_home: ^1.0.5
+  badges: ^3.1.2
+  flutter_stepindicator: ^0.1.7
 
 dev_dependencies:
   flutter_test:
@@ -26,4 +27,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/icons/home.svg
+    - assets/icons/settings.svg
+    - assets/icons/notifications.svg
+    - assets/icons/cart.svg
+    - assets/icons/coupon.svg
+    - assets/icons/map.svg
+    - assets/icons/transactions.svg
+    - assets/icons/friends.svg
+    - assets/icons/search.svg
 

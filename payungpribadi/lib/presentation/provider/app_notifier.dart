@@ -1,24 +1,51 @@
-// ignore_for_file: unused_field, unused_element
+// ignore_for_file: unused_field, unused_element, prefer_final_fields
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'menu_notifier.dart';
 
 class AppNotifier extends ChangeNotifier {
-  int _selectedIndex = 0;
-  int get selectedIndex => _selectedIndex;
+  AppNotifier(TickerProvider tickerProvider)
+      : _animationController = AnimationController(
+          duration: const Duration(milliseconds: 300),
+          vsync: tickerProvider,
+        ),
+        _opacityAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
+          CurvedAnimation(
+            parent: AnimationController(
+              duration: const Duration(milliseconds: 300),
+              vsync: tickerProvider,
+            ),
+            curve: Curves.easeInOut,
+          ),
+        ) {
+    _draggableScrollableController.addListener(_handleControllerChange);
+
+    _opacityAnimation.addListener(() {
+      _opacity = _opacityAnimation.value;
+      notifyListeners();
+    });
+  }
+
+  final ScrollController _scrollController = ScrollController();
+
+  late Animation<double> _opacityAnimation;
+
+  late AnimationController _animationController;
+  AnimationController get animationController => _animationController;
 
   bool _isBottomSheetOpen = false;
   bool get isBottomSheetOpen => _isBottomSheetOpen;
 
-  double _bottomSheetSize = 0.2;
-  double get bottomSheetSize => _isBottomSheetOpen ? 0.5 : 0.20;
+  double _bottomSheetSize = 0.12;
+  double get bottomSheetSize => _isBottomSheetOpen ? 0.5 : 0.12;
 
-  final double _openSize = 0.6;
+  final double _openSize = 0.5;
   double get openSize => _openSize;
 
-  final double _closedSize = 0.2;
+  final double _closedSize = 0.12;
   double get closedSize => _closedSize;
 
   final DraggableScrollableController _draggableScrollableController =
@@ -26,11 +53,44 @@ class AppNotifier extends ChangeNotifier {
   DraggableScrollableController get draggableScrollableController =>
       _draggableScrollableController;
 
-  void setIndex(int index) {
-    if (_selectedIndex != index) {
-      _selectedIndex = index;
+  double _opacity = 0.0;
+  double get opacity => _opacity;
+
+  // Color get darkOverlayColor => Color.fromRGBO(0, 0, 0, _opacity);
+  Color get darkOverlayColor =>
+      Color.fromRGBO(0, 0, 0, (_opacity * 0.7).clamp(0.0, 1.0));
+
+  ScrollController get scrollController => _scrollController;
+
+  void updateOpacity(double size) {
+    final newOpacity = (0.0 + (1.0 - (size / 300))).clamp(0.0, 0.5);
+    if (_opacity != newOpacity) {
+      // Animate the opacity change
+      animationController.animateTo(newOpacity,
+          duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      _opacity = newOpacity;
       notifyListeners();
     }
+
+    if (size <= 0.12) {
+      _opacity = 0.0;
+      _isBottomSheetOpen = false;
+    } else if (size >= 0.5) {
+      _opacity = 0.3;
+      _isBottomSheetOpen = true;
+    } else {
+      double opacityValue =
+          (size - 0.12) / (0.3 - 0.12); // Linear interpolation
+      _opacity = opacityValue.clamp(0.0, 0.3);
+    }
+    notifyListeners();
+  }
+
+  void _handleControllerChange() {
+    // Update the bottom sheet size and opacity based on the controller's size
+    double size = _draggableScrollableController.size;
+    updateOpacity(size);
+    notifyListeners();
   }
 
   void toggleBottomSheet() {
@@ -49,6 +109,8 @@ class AppNotifier extends ChangeNotifier {
     if (isSheetOpen != _isBottomSheetOpen) {
       _isBottomSheetOpen = isSheetOpen;
       _bottomSheetSize = isSheetOpen ? _openSize : 0.2;
+      _opacity =
+          size < 0.2 ? 0.0 : (0.0 + (1.0 - (size - 0.2) / 0.4)).clamp(0.0, 0.5);
       notifyListeners();
     }
   }
@@ -74,6 +136,7 @@ class AppNotifier extends ChangeNotifier {
     }).then((value) {
       if (forceClose) {
         _isBottomSheetOpen = false;
+
         notifyListeners();
       }
     });
@@ -82,7 +145,7 @@ class AppNotifier extends ChangeNotifier {
   void setBottomSheetSize(double size) {
     _draggableScrollableController.animateTo(
       size,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 50),
       curve: Curves.bounceInOut,
     );
     _isBottomSheetOpen =
@@ -92,6 +155,7 @@ class AppNotifier extends ChangeNotifier {
 
   @override
   void dispose() {
+    _animationController.dispose();
     super.dispose();
   }
 }

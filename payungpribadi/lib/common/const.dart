@@ -1,0 +1,9 @@
+const String svgHome = "assets/icons/home.svg";
+const String svgNotifications = "assets/icons/notifications.svg";
+const String svgSettings = "assets/icons/settings.svg";
+const String svgCart = "assets/icons/cart.svg";
+const String svgCoupon = "assets/icons/coupon.svg";
+const String svgMap = "assets/icons/map.svg";
+const String svgTransactions = "assets/icons/transactions.svg";
+const String svgFriends = "assets/icons/friends.svg";
+const String svgSearch = "assets/icons/search.svg";
